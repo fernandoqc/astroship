@@ -1,0 +1,93 @@
+// src/components/Chatbot.astro
+---
+import { useState } from 'react';
+
+const [messages, setMessages] = useState([]);
+const [input, setInput] = useState('');
+
+const handleInputChange = (e) => {
+  setInput(e.target.value);
+};
+
+const handleSendMessage = async () => {
+  if (input.trim() === '') return;
+
+  const userMessage = { role: 'user', content: input };
+  setMessages([...messages, userMessage]);
+
+  const response = await fetch('/api/chatbot', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ message: input }),
+  });
+
+  const data = await response.json();
+  const botMessage = { role: 'assistant', content: data.choices[0].message.content };
+
+  setMessages((prevMessages) => [...prevMessages, botMessage]);
+  setInput('');
+};
+---
+
+<style>
+  .chatbot-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+  }
+  .messages {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+  }
+  .message {
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+  }
+  .user-message {
+    background-color: #d1e7dd;
+    text-align: right;
+  }
+  .bot-message {
+    background-color: #f8d7da;
+    text-align: left;
+  }
+  .input-container {
+    display: flex;
+  }
+  .input-container input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  .input-container button {
+    padding: 10px 20px;
+    margin-left: 10px;
+    border: none;
+    background-color: #007bff;
+    color: #fff;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+</style>
+
+<div class="chatbot-container">
+  <div class="messages">
+    {messages.map((message, index) => (
+      <div class={`message ${message.role === 'user' ? 'user-message' : 'bot-message'}`} key={index}>
+        {message.content}
+      </div>
+    ))}
+  </div>
+  <div class="input-container">
+    <input type="text" value={input} onInput={handleInputChange} />
+    <button onClick={handleSendMessage}>Send</button>
+  </div>
+</div>
